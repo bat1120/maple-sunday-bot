@@ -2,6 +2,7 @@ import json
 from pathlib import Path
 
 import pytest
+import requests
 
 from maple_sunday_bot.nexon import NexonApiError, NexonClient
 
@@ -17,8 +18,19 @@ class FakeResponse:
         return self._payload
 
 
+class FakeMalformedResponse(FakeResponse):
+    """상태 코드는 정상(200)이지만 본문이 JSON으로 파싱되지 않는 응답."""
+
+    def json(self):
+        raise ValueError("JSON 파싱 실패")
+
+
 class FakeSession:
-    """미리 정해둔 응답을 순서대로 돌려주고, 호출 내역을 기록한다."""
+    """미리 정해둔 응답을 순서대로 돌려주고, 호출 내역을 기록한다.
+
+    목록의 항목이 예외 인스턴스면 반환하지 않고 그대로 raise한다 —
+    requests.RequestException 같은 네트워크 오류를 흉내내기 위해서다.
+    """
 
     def __init__(self, responses):
         self._responses = list(responses)
@@ -26,7 +38,10 @@ class FakeSession:
 
     def get(self, url, headers=None, params=None, timeout=None):
         self.calls.append({"url": url, "headers": headers, "params": params})
-        return self._responses.pop(0)
+        response = self._responses.pop(0)
+        if isinstance(response, Exception):
+            raise response
+        return response
 
 
 def _load(name):
@@ -104,3 +119,30 @@ def test_400은_재시도하지_않고_바로_실패한다():
         client.get_event_notices()
 
     assert len(session.calls) == 1
+
+
+def test_요청_예외가_나면_기다렸다_다시_시도한다():
+    slept = []
+    client, session = _client(
+        [
+            requests.ConnectionError("연결 실패"),
+            FakeResponse(200, _load("notice_event_list.json")),
+        ],
+        sleeps=slept,
+    )
+
+    notices = client.get_event_notices()
+
+    assert len(notices) > 0
+    assert len(session.calls) == 2
+    assert slept == [1.0]
+
+
+def test_200인데_본문이_JSON이_아니면_NexonApiError로_감싼다():
+    client, session = _client([FakeMalformedResponse(200) for _ in range(3)])
+
+    with pytest.raises(NexonApiError) as excinfo:
+        client.get_event_notices()
+
+    assert len(session.calls) == 3
+    assert not isinstance(excinfo.value, ValueError)

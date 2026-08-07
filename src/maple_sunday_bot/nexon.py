@@ -40,7 +40,12 @@ class NexonClient:
         return data.get("contents") or ""
 
     def _get(self, path: str, params: dict | None = None) -> dict[str, Any]:
-        """재시도를 포함한 GET. 지수 백오프로 1초, 2초 쉰다."""
+        """재시도를 포함한 GET. 지수 백오프로 1초, 2초 쉰다.
+
+        상태 코드가 200이어도 본문이 올바른 JSON이 아니면(ValueError) 다른
+        재시도 가능한 실패와 같은 경로를 탄다 — 재시도 후에도 계속 실패하면
+        NexonApiError로 감싸 던진다.
+        """
         url = BASE_URL + path
         headers = {API_KEY_HEADER: self._api_key}
         last_error = ""
@@ -50,11 +55,11 @@ class NexonClient:
                 response = self._session.get(
                     url, headers=headers, params=params or {}, timeout=TIMEOUT_SECONDS
                 )
-            except requests.RequestException as exc:
-                last_error = f"요청 실패: {exc}"
-            else:
                 if response.status_code == 200:
                     return response.json()
+            except (requests.RequestException, ValueError) as exc:
+                last_error = f"요청 실패: {exc}"
+            else:
                 last_error = f"HTTP {response.status_code}"
                 if response.status_code not in RETRY_STATUS:
                     break

@@ -1,0 +1,184 @@
+{
+  "event_notice": [
+    {
+      "title": "스페셜 썬데이 메이플",
+      "url": "https://maplestory.nexon.com/News/Event/1368",
+      "thumbnail_url": "https://file.nexon.com/NxFile/download/FileDownloader.aspx?oidFile=4836958629355586309",
+      "notice_id": 1368,
+      "date": "2026-08-07T10:00+09:00",
+      "date_event_start": "2026-08-09T00:00+09:00",
+      "date_event_end": "2026-08-09T23:59+09:00"
+    },
+    {
+      "title": "메이플스토리M 렌 레벨 달성 이벤트",
+      "url": "https://maplestory.nexon.com/News/Event/1366",
+      "thumbnail_url": "https://file.nexon.com/NxFile/download/FileDownloader.aspx?oidFile=4620785769932391642",
+      "notice_id": 1366,
+      "date": "2026-07-30T10:00+09:00",
+      "date_event_start": "2026-07-30T10:00+09:00",
+      "date_event_end": "2026-08-26T23:59+09:00"
+    },
+    {
+      "title": "[미니게임] - 울티마 스쿼드",
+      "url": "https://maplestory.nexon.com/News/Event/1364",
+      "thumbnail_url": "https://file.nexon.com/NxFile/download/FileDownloader.aspx?oidFile=5629592073578480769",
+      "notice_id": 1364,
+      "date": "2026-07-23T08:11+09:00",
+      "date_event_start": "2026-07-23T10:00+09:00",
+      "date_event_end": "2026-08-19T23:59+09:00"
+    },
+    {
+      "title": "[사냥 이벤트] - 상인단의 물자 지원 II",
+      "url": "https://maplestory.nexon.com/News/Event/1363",
+      "thumbnail_url": "https://file.nexon.com/NxFile/download/FileDownloader.aspx?oidFile=4764901056792495014",
+      "notice_id": 1363,
+      "date": "2026-07-23T08:11+09:00",
+      "date_event_start": "2026-07-23T10:00+09:00",
+      "date_event_end": "2026-08-19T23:59+09:00"
+    },
+    {
+      "title": "모멘텀 패스",
+      "url": "https://maplestory.nexon.com/News/Event/1362",
+      "thumbnail_url": "https://file.nexon.com/NxFile/download/FileDownloader.aspx?oidFile=5269304142043546587",
+      "notice_id": 1362,
+      "date": "2026-07-23T08:11+09:00",
+      "date_event_start": "2026-07-23T10:00+09:00",
+      "date_event_end": "2026-09-16T23:59+09:00"
+    },
+    {
+      "title": "메이플포인트 샵",
+      "url": "https://maplestory.nexon.com/News/Event/1361",
+      "thumbnail_url": "https://file.nexon.com/NxFile/download/FileDownloader.aspx?oidFile=5341361590052587401",
+      "notice_id": 1361,
+      "date": "2026-07-23T08:11+09:00",
+      "date_event_start": "2026-07-23T10:00+09:00",
+      "date_event_end": "2026-08-19T23:59+09:00"
+    },
+    {
+      "title": "헤이즐의 부탁",
+      "url": "https://maplestory.nexon.com/News/Event/1360",
+      "thumbnail_url": "https://file.nexon.com/NxFile/download/FileDownloader.aspx?oidFile=4981073718647195107",
+      "notice_id": 1360,
+      "date": "2026-07-23T08:11+09:00",
+      "date_event_start": "2026-07-23T10:00+09:00",
+      "date_event_end": "2026-09-16T23:59+09:00"
+    },
+    {
+      "title": "프리미엄PC방 접속보상 이벤트 & 기프트샵",
+      "url": "https://maplestory.nexon.com/News/Event/1358",
+      "thumbnail_url": "https://file.nexon.com/NxFile/download/FileDownloader.aspx?oidFile=4909016214803579561",
+      "notice_id": 1358,
+      "date": "2026-07-23T08:11+09:00",
+      "date_event_start": "2026-07-24T00:00+09:00",
+      "date_event_end": "2026-08-20T23:59+09:00"
+    },
+    {
+      "title": "챌린저스 월드 시즌4",
+      "url": "https://maplestory.nexon.com/News/Event/1349",
+      "thumbnail_url": "https://file.nexon.com/NxFile/download/FileDownloader.aspx?oidFile=4909016094544495994",
+      "notice_id": 1349,
+      "date": "2026-06-18T11:59+09:00",
+      "date_event_start": "2026-06-18T12:00+09:00",
+      "date_event_end": "2026-09-17T04:00+09:00"
+    },
+    {
+      "title": "[보스 격파 이벤트] - 메이린 격파 이벤트",
+      "url": "https://maplestory.nexon.com/News/Event/1348",
+      "thumbnail_url": "https://file.nexon.com/NxFile/download/FileDownloader.aspx?oidFile=5269304077619037196",
+      "notice_id": 1348,
+      "date": "2026-06-18T11:59+09:00",
+      "date_event_start": "2026-06-18T12:00+09:00",
+      "date_event_end": "2026-09-16T23:59+09:00"
+    },
+    {
+      "title": "챌린저스 패스",
+      "url": "https://maplestory.nexon.com/News/Event/1347",
+      "thumbnail_url": "https://file.nexon.com/NxFile/download/FileDownloader.aspx?oidFile=5701649607486867264",
+      "notice_id": 1347,
+      "date": "2026-06-18T11:59+09:00",
+      "date_event_start": "2026-06-18T12:00+09:00",
+      "date_event_end": "2026-09-16T23:59+09:00"
+    },
+    {
+      "title": "하이퍼 버닝 MAX",
+      "url": "https://maplestory.nexon.com/News/Event/1346",
+      "thumbnail_url": "https://file.nexon.com/NxFile/download/FileDownloader.aspx?oidFile=5125188988327428856",
+      "notice_id": 1346,
+      "date": "2026-06-18T11:59+09:00",
+      "date_event_start": "2026-06-18T12:00+09:00",
+      "date_event_end": "2026-09-16T23:59+09:00"
+    },
+    {
+      "title": "하이퍼 블링크",
+      "url": "https://maplestory.nexon.com/News/Event/1345",
+      "thumbnail_url": "https://file.nexon.com/NxFile/download/FileDownloader.aspx?oidFile=4836958466146830001",
+      "notice_id": 1345,
+      "date": "2026-06-18T11:59+09:00",
+      "date_event_start": "2026-06-18T12:00+09:00",
+      "date_event_end": "2026-09-16T23:59+09:00"
+    },
+    {
+      "title": "버닝 BEYOND",
+      "url": "https://maplestory.nexon.com/News/Event/1344",
+      "thumbnail_url": "https://file.nexon.com/NxFile/download/FileDownloader.aspx?oidFile=5629592090758350393",
+      "notice_id": 1344,
+      "date": "2026-06-18T11:59+09:00",
+      "date_event_start": "2026-06-18T12:00+09:00",
+      "date_event_end": "2026-09-16T23:59+09:00"
+    },
+    {
+      "title": "아이템 버닝 PLUS",
+      "url": "https://maplestory.nexon.com/News/Event/1343",
+      "thumbnail_url": "https://file.nexon.com/NxFile/download/FileDownloader.aspx?oidFile=4909016150379070671",
+      "notice_id": 1343,
+      "date": "2026-06-18T12:00+09:00",
+      "date_event_start": "2026-06-18T12:00+09:00",
+      "date_event_end": "2026-09-16T23:59+09:00"
+    },
+    {
+      "title": "[출석 이벤트] - 울티마 작전 일지",
+      "url": "https://maplestory.nexon.com/News/Event/1342",
+      "thumbnail_url": "https://file.nexon.com/NxFile/download/FileDownloader.aspx?oidFile=5629592138002990259",
+      "notice_id": 1342,
+      "date": "2026-06-18T11:59+09:00",
+      "date_event_start": "2026-06-18T12:00+09:00",
+      "date_event_end": "2026-09-16T23:59+09:00"
+    },
+    {
+      "title": "[성장 이벤트] - 에테리온 아티팩트",
+      "url": "https://maplestory.nexon.com/News/Event/1341",
+      "thumbnail_url": "https://file.nexon.com/NxFile/download/FileDownloader.aspx?oidFile=5629591953319397292",
+      "notice_id": 1341,
+      "date": "2026-06-18T11:59+09:00",
+      "date_event_start": "2026-06-18T12:00+09:00",
+      "date_event_end": "2026-09-16T23:59+09:00"
+    },
+    {
+      "title": "[육성 지원 이벤트] - 신입 용병 지원 미션",
+      "url": "https://maplestory.nexon.com/News/Event/1338",
+      "thumbnail_url": "https://file.nexon.com/NxFile/download/FileDownloader.aspx?oidFile=4909016043004888776",
+      "notice_id": 1338,
+      "date": "2026-06-18T12:00+09:00",
+      "date_event_start": "2026-06-18T12:00+09:00",
+      "date_event_end": "2026-09-16T23:59+09:00"
+    },
+    {
+      "title": "[이벤트샵] - 연합 토큰샵 & 상인단 현상금 의뢰",
+      "url": "https://maplestory.nexon.com/News/Event/1337",
+      "thumbnail_url": "https://file.nexon.com/NxFile/download/FileDownloader.aspx?oidFile=4836958590700881116",
+      "notice_id": 1337,
+      "date": "2026-06-18T11:59+09:00",
+      "date_event_start": "2026-06-18T12:00+09:00",
+      "date_event_end": "2026-09-16T23:59+09:00"
+    },
+    {
+      "title": "의문의 결계",
+      "url": "https://maplestory.nexon.com/News/Event/1336",
+      "thumbnail_url": "https://file.nexon.com/NxFile/download/FileDownloader.aspx?oidFile=5053131338454926550",
+      "notice_id": 1336,
+      "date": "2026-06-18T11:59+09:00",
+      "date_event_start": "2026-06-18T12:00+09:00",
+      "date_event_end": "2026-09-16T23:59+09:00"
+    }
+  ]
+}

@@ -9,10 +9,10 @@ MAX_SEEN = 100
 
 
 def load_seen(path: Path) -> list[int]:
-    """기록된 notice_id 목록을 읽는다. 파일이 없거나 깨졌으면 빈 목록."""
+    """기록된 notice_id 목록을 읽는다. 파일이 없거나 JSON이 깨졌으면 빈 목록."""
     try:
         data = json.loads(Path(path).read_text(encoding="utf-8"))
-    except (OSError, json.JSONDecodeError):
+    except (FileNotFoundError, json.JSONDecodeError, UnicodeDecodeError):
         return []
     seen = data.get("seen") if isinstance(data, dict) else None
     if not isinstance(seen, list):

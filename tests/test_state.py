@@ -1,5 +1,7 @@
 import json
 
+import pytest
+
 from maple_sunday_bot.state import MAX_SEEN, load_seen, save_seen
 
 
@@ -39,3 +41,10 @@ def test_사람이_읽을_수_있는_JSON으로_저장한다(tmp_path):
     data = json.loads(path.read_text(encoding="utf-8"))
     assert data == {"seen": [1356]}
     assert path.read_text(encoding="utf-8").endswith("\n")
+
+
+def test_읽을_수_없는_경로는_조용히_넘기지_않는다(tmp_path):
+    path = tmp_path / "seen.json"
+    path.mkdir()
+    with pytest.raises(OSError):
+        load_seen(path)

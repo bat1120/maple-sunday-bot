@@ -67,7 +67,7 @@ maple-sunday-bot/
 ├─ src/maple_sunday_bot/
 │  ├─ nexon.py       # 넥슨 오픈 API 클라이언트
 │  ├─ notice.py      # 썬데이 판별 + 본문 이미지 URL 추출
-│  ├─ discord.py     # 웹훅 페이로드 조립 및 전송
+│  ├─ webhook.py     # 웹훅 페이로드 조립 및 전송
 │  ├─ state.py       # 발송 완료된 notice_id 읽기/쓰기
 │  └─ main.py        # 진입점 (조립 + CLI 플래그)
 ├─ state/seen.json
@@ -86,12 +86,12 @@ maple-sunday-bot/
 |---|---|---|
 | `nexon.py` | 이벤트 공지 목록/상세 조회. 재시도·에러 변환 담당 | `requests` |
 | `notice.py` | 제목으로 썬데이 여부 판별, 본문 HTML에서 이미지 URL 추출 | 표준 라이브러리만 |
-| `discord.py` | 공지 데이터 → 웹훅 페이로드 변환, 전송 | `requests` |
+| `webhook.py` | 공지 데이터 → 웹훅 페이로드 변환, 전송 | `requests` |
 | `state.py` | `seen.json` 읽기/쓰기 | 표준 라이브러리만 |
 | `main.py` | 위 넷을 조립. 어떤 순서로 무엇을 할지만 담당 | 위 전부 |
 
 `notice.py`와 `state.py`는 네트워크에 닿지 않는 순수 로직이라 테스트가 쉽다.
-`nexon.py`와 `discord.py`는 HTTP 경계를 한 곳에 몰아둔 얇은 층이다.
+`nexon.py`와 `webhook.py`는 HTTP 경계를 한 곳에 몰아둔 얇은 층이다.
 
 ## 데이터 흐름
 
@@ -100,13 +100,13 @@ maple-sunday-bot/
 3. `notice.is_sunday(title)`로 필터 + `state.load_seen()`에 없는 `notice_id`만 남긴다.
 4. 남은 각 공지에 대해 `nexon.get_event_notice_detail(notice_id)` → 본문 HTML.
 5. `notice.extract_images(html)` → 이미지 URL 리스트.
-6. `discord.send(notice, images)` → 웹훅 전송.
-7. 전송에 성공한 `notice_id`만 `state.add_seen()`으로 기록.
+6. `webhook.send(notice, images)` → 웹훅 전송.
+7. 전송에 성공한 `notice_id`만 `state.save_seen()`으로 기록.
 8. `seen.json`이 변경됐으면 Actions가 리포에 커밋·푸시한다.
 
 ### 썬데이 판별 규칙
 
-제목을 공백 제거 후 소문자화하여 `"썬데이메이플"` 부분 문자열을 포함하는지 본다.
+제목에서 공백을 모두 지운 뒤 `"썬데이메이플"` 부분 문자열을 포함하는지 본다.
 "썬데이 메이플", "스페셜 썬데이 메이플", "썬데이메이플" 모두 걸린다.
 
 ### 메시지 형태
@@ -180,7 +180,7 @@ GitHub Secrets 두 개만 필요하다.
 | `notice.is_sunday` | "썬데이 메이플", "스페셜 썬데이 메이플", "썬데이메이플" 통과 / "썬데이" 없는 이벤트 제목 탈락 |
 | `notice.extract_images` | fixture HTML에서 이미지 URL 전부 추출, 이미지 없는 본문은 빈 리스트 |
 | `state` | 저장/로드 왕복, 파일 없을 때 빈 상태, 100건 초과 시 잘림 |
-| `discord` 페이로드 조립 | 이미지 0장/1장/12장에 대한 임베드 개수와 메시지 분할 |
+| `webhook` 페이로드 조립 | 이미지 0장/1장/12장에 대한 임베드 개수와 메시지 분할 |
 | `nexon` 재시도 | 429 응답 시 재시도 후 성공, 3회 실패 시 예외 |
 | `main` 통합 | fixture 기반으로 목록→필터→발송→기록 전체 경로. 이미 본 공지는 발송 안 됨 |
 

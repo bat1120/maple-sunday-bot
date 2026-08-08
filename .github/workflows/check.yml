@@ -26,13 +26,25 @@ jobs:
       - name: 의존성 설치
         run: pip install -e .
 
+      - name: 웹훅 토큰 마스킹
+        env:
+          DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
+        run: echo "::add-mask::${DISCORD_WEBHOOK_URL##*/}"
+
       - name: 공지 확인 및 발송
         env:
           NEXON_API_KEY: ${{ secrets.NEXON_API_KEY }}
           DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
         run: python -m maple_sunday_bot.main
 
+      # if: always() — save_seen()은 전송 성공 직후에만 호출되므로, 목록 조회
+      # 자체가 실패하거나 아무것도 못 보냈으면 seen.json이 안 바뀌어 아래
+      # git status 가드가 걸러낸다. 반대로 배치 중간에 실패해도(예: 공지
+      # A는 성공, B는 실패) A의 기록은 이미 파일에 있으므로 커밋해야
+      # 한다 — 그렇지 않으면 A가 다음 회차에 다시 발송되어 스팸이 된다.
+      # 따라서 발송 스텝의 성공 여부와 무관하게 이 스텝은 항상 돈다.
       - name: 발송 이력 커밋
+        if: always()
         run: |
           if [[ -z "$(git status --porcelain state/seen.json)" ]]; then
             echo "변경 없음"

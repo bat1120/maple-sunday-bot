@@ -1,6 +1,6 @@
 import pytest
 
-from maple_sunday_bot.main import run
+from maple_sunday_bot.main import main, run
 from maple_sunday_bot.nexon import NexonApiError
 from maple_sunday_bot.notice import Notice
 from maple_sunday_bot.state import load_seen, save_seen
@@ -38,16 +38,23 @@ class FakeClient:
 
 
 class FakeSession:
-    def __init__(self, fail=False):
+    def __init__(self, fail=False, statuses=None):
         self.calls = []
         self._fail = fail
+        # statuses가 주어지면 post() 호출마다 하나씩 순서대로 꺼내 쓴다
+        # (성공 후 실패처럼, 호출마다 다른 결과를 내야 하는 경우용).
+        self._statuses = list(statuses) if statuses is not None else None
 
     def post(self, url, json=None, timeout=None):
         self.calls.append(json)
-        outer = self
+        if self._statuses is not None:
+            status_code = self._statuses.pop(0)
+        else:
+            status_code = 500 if self._fail else 204
+        outer_status = status_code
 
         class _Response:
-            status_code = 500 if outer._fail else 204
+            status_code = outer_status
 
         return _Response()
 
@@ -138,3 +145,59 @@ def test_새_공지가_없으면_아무것도_하지_않는다(tmp_path):
 
     assert run(client, WEBHOOK, state_path, session=session) == 0
     assert session.calls == []
+
+
+def test_배치_중간에_실패해도_그_전까지의_성공은_기록된다(tmp_path):
+    state_path = tmp_path / "seen.json"
+    client = FakeClient(
+        [_notice(1356, "썬데이 메이플"), _notice(1350, "스페셜 썬데이 메이플")]
+    )
+    # 첫 번째 공지는 성공(204), 두 번째 공지는 실패(500).
+    session = FakeSession(statuses=[204, 500])
+
+    with pytest.raises(WebhookError):
+        run(client, WEBHOOK, state_path, session=session)
+
+    # 두 번째 전송이 실패해 예외가 났어도, 먼저 성공한 첫 번째는 기록되어 있어야 한다.
+    assert load_seen(state_path) == [1356]
+
+
+def test_NEXON_API_KEY가_없으면_1을_반환한다(monkeypatch, tmp_path):
+    monkeypatch.delenv("NEXON_API_KEY", raising=False)
+    monkeypatch.setenv("DISCORD_WEBHOOK_URL", WEBHOOK)
+
+    assert main(["--state", str(tmp_path / "seen.json")]) == 1
+
+
+def test_bootstrap이_아닐때_DISCORD_WEBHOOK_URL이_없으면_1을_반환한다(
+    monkeypatch, tmp_path
+):
+    monkeypatch.setenv("NEXON_API_KEY", "test-key")
+    monkeypatch.delenv("DISCORD_WEBHOOK_URL", raising=False)
+
+    assert main(["--state", str(tmp_path / "seen.json")]) == 1
+
+
+def test_bootstrap일때는_DISCORD_WEBHOOK_URL이_없어도_그_이유로_실패하지_않는다(
+    monkeypatch, tmp_path
+):
+    monkeypatch.setenv("NEXON_API_KEY", "test-key")
+    monkeypatch.delenv("DISCORD_WEBHOOK_URL", raising=False)
+    # run()까지는 도달하므로 네트워크를 타지 않도록 갈아끼운다.
+    monkeypatch.setattr("maple_sunday_bot.main.run", lambda *a, **k: 0)
+
+    result = main(["--bootstrap", "--state", str(tmp_path / "seen.json")])
+
+    assert result == 0
+
+
+def test_run에서_예외가_나면_전파하지_않고_1을_반환한다(monkeypatch, tmp_path):
+    monkeypatch.setenv("NEXON_API_KEY", "test-key")
+    monkeypatch.setenv("DISCORD_WEBHOOK_URL", WEBHOOK)
+
+    def _boom(*args, **kwargs):
+        raise RuntimeError("네트워크 실패 가정")
+
+    monkeypatch.setattr("maple_sunday_bot.main.run", _boom)
+
+    assert main(["--state", str(tmp_path / "seen.json")]) == 1

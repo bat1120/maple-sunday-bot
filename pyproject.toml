@@ -3,7 +3,7 @@ name = "maple-sunday-bot"
 version = "0.1.0"
 description = "메이플스토리 썬데이 메이플 공지를 디스코드로 알려주는 봇"
 requires-python = ">=3.10"
-dependencies = ["requests>=2.31"]
+dependencies = ["requests>=2.31", "pillow>=10"]
 
 [project.optional-dependencies]
 dev = ["pytest>=8.0"]

@@ -6,6 +6,8 @@ import requests
 
 from maple_sunday_bot.notice import Notice
 from maple_sunday_bot.webhook import (
+    BOT_AVATAR_URL,
+    BOT_USERNAME,
     EMBED_COLOR,
     MAX_ATTEMPTS_PER_MESSAGE,
     MAX_BYTES_PER_MESSAGE,
@@ -140,9 +142,9 @@ def test_조각이_열두개면_개수_상한으로_메시지를_나눈다():
     assert len(messages) == 2
     assert len(messages[0].files) == MAX_FILES_PER_MESSAGE
     assert len(messages[1].files) == 2
-    # 첫 메시지에만 임베드가 실린다
+    # 첫 메시지에만 임베드가 실린다 (표시 이름·아바타는 모든 메시지에 붙는다)
     assert "embeds" in messages[0].payload
-    assert messages[1].payload == {}
+    assert "embeds" not in messages[1].payload
     # 순서 보존, 전부 포함
     all_files = messages[0].files + messages[1].files
     assert all_files == tuple(slices)
@@ -310,3 +312,35 @@ def test_Message는_frozen_dataclass():
     assert message.files == ()
     with pytest.raises(dataclasses.FrozenInstanceError):
         message.payload = {"b": 2}
+
+
+def test_URL_임베드_방식의_모든_메시지에_표시_이름과_아바타가_붙는다():
+    messages = build_messages(NOTICE, _images(12))
+
+    assert len(messages) == 2  # 이어지는 메시지도 있어야 의미가 있는 검사다
+    for message in messages:
+        assert message.payload["username"] == BOT_USERNAME
+        assert message.payload["avatar_url"] == BOT_AVATAR_URL
+
+
+def test_첨부_방식의_모든_메시지에_표시_이름과_아바타가_붙는다():
+    messages = build_attachment_messages(NOTICE, _slices(12))
+
+    # 두 번째 메시지는 임베드가 없다. 여기에도 안 붙이면 웹훅 기본 이름으로 뜬다.
+    assert len(messages) == 2
+    assert "embeds" not in messages[1].payload
+    for message in messages:
+        assert message.payload["username"] == BOT_USERNAME
+        assert message.payload["avatar_url"] == BOT_AVATAR_URL
+
+
+def test_첨부가_없는_경우에도_표시_이름과_아바타가_붙는다():
+    payload = build_attachment_messages(NOTICE, [])[0].payload
+
+    assert payload["username"] == BOT_USERNAME
+    assert payload["avatar_url"] == BOT_AVATAR_URL
+
+
+def test_표시_이름은_메이플알리미다():
+    assert BOT_USERNAME == "메이플알리미"
+    assert BOT_AVATAR_URL.startswith("https://")

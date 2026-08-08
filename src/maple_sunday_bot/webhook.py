@@ -24,6 +24,13 @@ RATE_LIMIT_STATUS = 429
 MAX_ATTEMPTS_PER_MESSAGE = 3
 DEFAULT_RETRY_AFTER_SECONDS = 1.0
 
+# 웹훅에 설정된 이름·아이콘 대신 이 값이 쓰인다. 코드에 두면 웹훅을 새로 만들거나
+# 다른 서버로 옮겨도 보이는 이름과 아이콘이 그대로 따라온다.
+BOT_USERNAME = "메이플알리미"
+BOT_AVATAR_URL = (
+    "https://raw.githubusercontent.com/bat1120/maple-sunday-bot/main/assets/avatar.png"
+)
+
 
 class WebhookError(Exception):
     """디스코드 웹훅 전송이 실패했을 때."""
@@ -35,6 +42,14 @@ class Message:
 
     payload: dict
     files: tuple[tuple[str, bytes], ...] = field(default_factory=tuple)
+
+
+def _with_identity(payload: dict) -> dict:
+    """메시지 페이로드에 표시 이름과 아바타를 붙인다.
+
+    이어지는 메시지에도 붙여야 한다 — 안 붙이면 두 번째 메시지부터 웹훅 기본 이름으로 뜬다.
+    """
+    return {**payload, "username": BOT_USERNAME, "avatar_url": BOT_AVATAR_URL}
 
 
 def _head_embed(notice: Notice) -> dict:
@@ -58,7 +73,9 @@ def build_messages(notice: Notice, images: list[str]) -> list[Message]:
     embeds = [head] + [{"image": {"url": url}} for url in images[1:]]
 
     return [
-        Message(payload={"embeds": embeds[i : i + MAX_EMBEDS_PER_MESSAGE]})
+        Message(
+            payload=_with_identity({"embeds": embeds[i : i + MAX_EMBEDS_PER_MESSAGE]})
+        )
         for i in range(0, len(embeds), MAX_EMBEDS_PER_MESSAGE)
     ]
 
@@ -83,7 +100,7 @@ def build_attachment_messages(
     head_embed = _head_embed(notice)
 
     if not slices:
-        return [Message(payload={"embeds": [head_embed]})]
+        return [Message(payload=_with_identity({"embeds": [head_embed]}))]
 
     batches: list[list[tuple[str, bytes]]] = []
     current: list[tuple[str, bytes]] = []
@@ -102,7 +119,7 @@ def build_attachment_messages(
 
     return [
         Message(
-            payload={"embeds": [head_embed]} if i == 0 else {},
+            payload=_with_identity({"embeds": [head_embed]} if i == 0 else {}),
             files=tuple(batch),
         )
         for i, batch in enumerate(batches)

@@ -99,6 +99,25 @@ def test_최신_공지가_목록_앞에_기록된다(tmp_path):
     assert load_seen(state_path) == [1356, 1350]
 
 
+def test_한_회차에_여러_건을_보내도_배치_내에서_최신이_앞에_온다(tmp_path):
+    state_path = tmp_path / "seen.json"
+    client = FakeClient(
+        [
+            _notice(1360, "썬데이 메이플"),
+            _notice(1358, "스페셜 썬데이 메이플"),
+            _notice(1355, "썬데이 메이플"),
+        ]
+    )
+    session = FakeSession()
+
+    sent = run(client, WEBHOOK, state_path, session=session)
+
+    assert sent == 3
+    # get_event_notices()가 최신순으로 준 순서(1360, 1358, 1355)가
+    # seen.json에도 그대로(최신이 앞) 유지되어야 한다.
+    assert load_seen(state_path) == [1360, 1358, 1355]
+
+
 def test_상세_조회가_실패해도_제목과_링크는_보낸다(tmp_path):
     state_path = tmp_path / "seen.json"
     client = FakeClient([_notice(1356, "썬데이 메이플")], detail_error=True)
@@ -138,13 +157,15 @@ def test_bootstrap은_발송_없이_기록만_한다(tmp_path):
     assert load_seen(state_path) == [1356, 1350]
 
 
-def test_새_공지가_없으면_아무것도_하지_않는다(tmp_path):
+def test_새_공지가_없으면_아무것도_하지_않는다(tmp_path, capsys):
     state_path = tmp_path / "seen.json"
     client = FakeClient([_notice(1355, "메이플 히어로즈")])
     session = FakeSession()
 
     assert run(client, WEBHOOK, state_path, session=session) == 0
     assert session.calls == []
+    # 조용한 정상 실행도 로그 한 줄은 남겨야 Actions 로그에서 구분된다.
+    assert capsys.readouterr().out.strip() != ""
 
 
 def test_배치_중간에_실패해도_그_전까지의_성공은_기록된다(tmp_path):

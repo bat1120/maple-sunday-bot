@@ -25,6 +25,7 @@ def run(client, webhook_url, state_path, bootstrap=False, session=None) -> int:
     ]
 
     if not fresh:
+        print("새 썬데이 공지가 없습니다.")
         return 0
 
     if bootstrap:
@@ -33,6 +34,7 @@ def run(client, webhook_url, state_path, bootstrap=False, session=None) -> int:
         return 0
 
     sent_count = 0
+    sent_ids: list[int] = []
     for notice in fresh:
         try:
             images = extract_images(client.get_event_notice_detail(notice.notice_id))
@@ -45,8 +47,11 @@ def run(client, webhook_url, state_path, bootstrap=False, session=None) -> int:
             webhook_url, webhook_module.build_messages(notice, images), session
         )
         # 전송 성공 직후에 기록한다. 여기서 죽으면 다음 회차에 다시 보낸다.
-        seen = [notice.notice_id] + seen
-        save_seen(state_path, seen)
+        # fresh는 최신이 앞이므로, 이번 회차에서 보낸 것들을 등장 순서 그대로
+        # sent_ids에 쌓고 그 전체를 원래 seen 앞에 붙인다 — 그래야 배치
+        # 안에서도 "최신이 앞" 규약이 깨지지 않는다.
+        sent_ids.append(notice.notice_id)
+        save_seen(state_path, sent_ids + seen)
         sent_count += 1
         print(f"발송 완료: [{notice.notice_id}] {notice.title}")
 

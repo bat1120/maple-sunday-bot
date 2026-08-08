@@ -9,7 +9,6 @@ from pathlib import Path
 
 from maple_sunday_bot import images as images_module
 from maple_sunday_bot import webhook as webhook_module
-from maple_sunday_bot.images import ImageError
 from maple_sunday_bot.nexon import NexonApiError, NexonClient
 from maple_sunday_bot.notice import extract_images, is_sunday
 from maple_sunday_bot.state import load_seen, save_seen
@@ -54,9 +53,12 @@ def run(client, webhook_url, state_path, bootstrap=False, session=None) -> int:
                     )
                 )
             messages = webhook_module.build_attachment_messages(notice, slices)
-        except (ImageError, ValueError) as exc:
+        except (images_module.ImageError, ValueError) as exc:
             # 화질보다 알림이 우선이다. 조각내기가 안 되면 기존 URL 임베드로 보낸다.
-            print(f"이미지 분할 실패, 링크 임베드로 대체합니다: {exc}", file=sys.stderr)
+            print(
+                f"이미지 분할 실패, 링크 임베드로 대체합니다: {type(exc).__name__}",
+                file=sys.stderr,
+            )
             messages = webhook_module.build_messages(notice, images)
 
         webhook_module.send(webhook_url, messages, session)

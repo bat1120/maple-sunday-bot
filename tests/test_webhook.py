@@ -1,3 +1,4 @@
+import dataclasses
 import json
 
 import pytest
@@ -307,5 +308,5 @@ def test_첨부가_없으면_지금처럼_json으로_보낸다():
 def test_Message는_frozen_dataclass():
     message = Message(payload={"a": 1})
     assert message.files == ()
-    with pytest.raises(Exception):
+    with pytest.raises(dataclasses.FrozenInstanceError):
         message.payload = {"b": 2}

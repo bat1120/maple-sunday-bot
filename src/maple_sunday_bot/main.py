@@ -7,7 +7,9 @@ import os
 import sys
 from pathlib import Path
 
+from maple_sunday_bot import images as images_module
 from maple_sunday_bot import webhook as webhook_module
+from maple_sunday_bot.images import ImageError
 from maple_sunday_bot.nexon import NexonApiError, NexonClient
 from maple_sunday_bot.notice import extract_images, is_sunday
 from maple_sunday_bot.state import load_seen, save_seen
@@ -43,9 +45,21 @@ def run(client, webhook_url, state_path, bootstrap=False, session=None) -> int:
             print(f"본문 조회 실패({notice.notice_id}): {exc}", file=sys.stderr)
             images = []
 
-        webhook_module.send(
-            webhook_url, webhook_module.build_messages(notice, images), session
-        )
+        try:
+            slices = []
+            for index, image_url in enumerate(images, start=1):
+                slices.extend(
+                    images_module.fetch_and_slice(
+                        image_url, f"{notice.notice_id}_{index:02d}", session
+                    )
+                )
+            messages = webhook_module.build_attachment_messages(notice, slices)
+        except (ImageError, ValueError) as exc:
+            # 화질보다 알림이 우선이다. 조각내기가 안 되면 기존 URL 임베드로 보낸다.
+            print(f"이미지 분할 실패, 링크 임베드로 대체합니다: {exc}", file=sys.stderr)
+            messages = webhook_module.build_messages(notice, images)
+
+        webhook_module.send(webhook_url, messages, session)
         # 전송 성공 직후에 기록한다. 여기서 죽으면 다음 회차에 다시 보낸다.
         # fresh는 최신이 앞이므로, 이번 회차에서 보낸 것들을 등장 순서 그대로
         # sent_ids에 쌓고 그 전체를 원래 seen 앞에 붙인다 — 그래야 배치

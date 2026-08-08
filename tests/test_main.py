@@ -1,4 +1,5 @@
 import pytest
+import requests
 
 from maple_sunday_bot.main import main, run
 from maple_sunday_bot.nexon import NexonApiError
@@ -45,7 +46,13 @@ class FakeSession:
         # (성공 후 실패처럼, 호출마다 다른 결과를 내야 하는 경우용).
         self._statuses = list(statuses) if statuses is not None else None
 
-    def post(self, url, json=None, timeout=None):
+    def get(self, url, timeout=None):
+        # 이 파일의 테스트는 네트워크를 타면 안 된다. main.run()이 이미지 조각내기를
+        # 위해 session.get()을 부르면 항상 실패시켜 images.fetch_and_slice가
+        # ImageError를 내게 하고, run()이 URL 임베드 폴백으로 넘어가게 한다.
+        raise requests.ConnectionError("테스트에서는 이미지 다운로드를 허용하지 않는다")
+
+    def post(self, url, json=None, data=None, files=None, timeout=None):
         self.calls.append(json)
         if self._statuses is not None:
             status_code = self._statuses.pop(0)
@@ -181,6 +188,31 @@ def test_배치_중간에_실패해도_그_전까지의_성공은_기록된다(t
 
     # 두 번째 전송이 실패해 예외가 났어도, 먼저 성공한 첫 번째는 기록되어 있어야 한다.
     assert load_seen(state_path) == [1356]
+
+
+def test_이미지_분할이_실패하면_URL_임베드_폴백으로_보내고_발송은_성공한다(tmp_path, capsys):
+    state_path = tmp_path / "seen.json"
+    client = FakeClient(
+        [_notice(1356, "스페셜 썬데이 메이플")],
+        details={1356: '<img src="https://file.nexon.com/a.png">'},
+    )
+    # FakeSession.get()은 항상 실패한다 → images.fetch_and_slice가 ImageError를 내야 하고,
+    # run()은 build_attachment_messages 대신 build_messages(URL 임베드)로 폴백해야 한다.
+    session = FakeSession()
+
+    sent = run(client, WEBHOOK, state_path, session=session)
+
+    assert sent == 1
+    assert len(session.calls) == 1
+    payload = session.calls[0]
+    embeds = payload["embeds"]
+    assert len(embeds) == 1
+    assert embeds[0]["title"] == "스페셜 썬데이 메이플"
+    # 폴백은 URL 임베드 방식이라 이미지가 링크로 실린다.
+    assert embeds[0]["image"]["url"] == "https://file.nexon.com/a.png"
+    assert load_seen(state_path) == [1356]
+    # 화질 저하보다 알림 실패가 더 나쁘다는 원칙이 로그로도 드러나야 한다.
+    assert "실패" in capsys.readouterr().err
 
 
 def test_NEXON_API_KEY가_없으면_1을_반환한다(monkeypatch, tmp_path):

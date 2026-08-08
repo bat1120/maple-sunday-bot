@@ -1,0 +1,45 @@
+name: 썬데이 메이플 공지 확인
+
+on:
+  schedule:
+    # 30분마다. GitHub 러너가 혼잡하면 지연될 수 있다.
+    - cron: "*/30 * * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: check
+  cancel-in-progress: false
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: 의존성 설치
+        run: pip install -e .
+
+      - name: 공지 확인 및 발송
+        env:
+          NEXON_API_KEY: ${{ secrets.NEXON_API_KEY }}
+          DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
+        run: python -m maple_sunday_bot.main
+
+      - name: 발송 이력 커밋
+        run: |
+          if [[ -z "$(git status --porcelain state/seen.json)" ]]; then
+            echo "변경 없음"
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add state/seen.json
+          git commit -m "chore: 발송 이력 갱신"
+          git push

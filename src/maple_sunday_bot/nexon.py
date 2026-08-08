@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import sys
 import time
 from typing import Any
 
@@ -27,10 +28,25 @@ class NexonClient:
         self._sleep = sleep
 
     def get_event_notices(self) -> list[Notice]:
-        """이벤트 공지 목록을 최신순으로 가져온다."""
+        """이벤트 공지 목록을 최신순으로 가져온다.
+
+        항목 하나가 깨져 있어도(필드 누락, 타입 이상 등) 전체 목록을 포기하지
+        않는다 — 관심 없는 이벤트의 이상한 항목 하나 때문에 진짜 썬데이 공지를
+        놓치면 안 된다. 깨진 항목은 건너뛰고 stderr에 남긴다.
+        """
         data = self._get("/maplestory/v1/notice-event")
         items = data.get("event_notice") or []
-        return [_to_notice(item) for item in items]
+        notices = []
+        for item in items:
+            try:
+                notices.append(_to_notice(item))
+            except (KeyError, TypeError, ValueError) as exc:
+                notice_id = item.get("notice_id") if isinstance(item, dict) else None
+                print(
+                    f"공지 항목 파싱 실패(notice_id={notice_id!r}): {exc}",
+                    file=sys.stderr,
+                )
+        return notices
 
     def get_event_notice_detail(self, notice_id: int) -> str:
         """공지 본문 HTML을 가져온다. 본문이 비어 있으면 빈 문자열."""
@@ -73,9 +89,9 @@ class NexonClient:
 def _to_notice(item: dict[str, Any]) -> Notice:
     return Notice(
         notice_id=int(item["notice_id"]),
-        title=item.get("title", ""),
-        url=item.get("url", ""),
-        date=item.get("date", ""),
+        title=item.get("title") or "",
+        url=item.get("url") or "",
+        date=item.get("date") or "",
         date_event_start=item.get("date_event_start"),
         date_event_end=item.get("date_event_end"),
     )

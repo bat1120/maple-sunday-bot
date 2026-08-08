@@ -112,6 +112,58 @@ def test_서버_오류가_계속되면_세_번_시도하고_포기한다():
     assert "500" in str(excinfo.value)
 
 
+def test_깨진_항목이_있어도_나머지_공지는_돌려준다():
+    client, session = _client(
+        [
+            FakeResponse(
+                200,
+                {
+                    "event_notice": [
+                        {"notice_id": "이상한값", "title": "깨진 공지", "url": "https://x"},
+                        {
+                            "notice_id": 1356,
+                            "title": "썬데이 메이플",
+                            "url": "https://maplestory.nexon.com/News/Event/1356",
+                            "date": "2026-08-07T10:00+09:00",
+                        },
+                    ]
+                },
+            )
+        ]
+    )
+
+    notices = client.get_event_notices()
+
+    assert len(notices) == 1
+    assert notices[0].notice_id == 1356
+    assert notices[0].title == "썬데이 메이플"
+
+
+def test_제목이_null이어도_깨지지_않는다():
+    client, session = _client(
+        [
+            FakeResponse(
+                200,
+                {
+                    "event_notice": [
+                        {
+                            "notice_id": 1357,
+                            "title": None,
+                            "url": "https://x",
+                            "date": "2026-08-07T10:00+09:00",
+                        }
+                    ]
+                },
+            )
+        ]
+    )
+
+    notices = client.get_event_notices()
+
+    assert len(notices) == 1
+    assert notices[0].title == ""
+
+
 def test_400은_재시도하지_않고_바로_실패한다():
     client, session = _client([FakeResponse(400)])
 
@@ -145,4 +197,4 @@ def test_200인데_본문이_JSON이_아니면_NexonApiError로_감싼다():
         client.get_event_notices()
 
     assert len(session.calls) == 3
-    assert not isinstance(excinfo.value, ValueError)
+    assert "요청 실패" in str(excinfo.value)

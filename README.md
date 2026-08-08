@@ -30,12 +30,14 @@ GitHub Actions cron이 30분마다 한 번 돌기 때문에 서버가 필요 없
 실행되어 `state/seen.json`이 커밋되어 있으므로 다시 할 필요는 없다. 아래는 참고용 절차다
 (다시 실행해도 해는 없지만 불필요하다).
 
-```bash
+```powershell
 python -m venv .venv
 .venv/Scripts/python -m pip install -e ".[dev]"
 $env:NEXON_API_KEY = "발급받은키"
 .venv/Scripts/python -m maple_sunday_bot.main --bootstrap
-git add state/seen.json && git commit -m "chore: 초기 상태 기록" && git push
+git add state/seen.json
+git commit -m "chore: 초기 상태 기록"
+git push
 ```
 
 ## 운영

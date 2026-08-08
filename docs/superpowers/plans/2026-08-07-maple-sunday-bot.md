@@ -461,6 +461,14 @@ def load_seen(path: Path) -> list[int]:
     if not isinstance(seen, list):
         return []
     return [item for item in seen if isinstance(item, int)]
+```
+
+> **Superseded (commit `522f637`):** 실제 구현은 `except (OSError, json.JSONDecodeError)`가 아니라
+> `except (FileNotFoundError, json.JSONDecodeError, UnicodeDecodeError)`를 쓴다 — `OSError`를 그대로
+> 두면 "읽을 수 없는 경로"(권한 오류 등 진짜 I/O 실패) 같은 것도 조용히 빈 목록으로 삼켜버리기 때문이다.
+> 이 계획 코드로 되돌리지 말 것.
+
+```python
 
 
 def save_seen(path: Path, seen: list[int]) -> None:
@@ -777,8 +785,21 @@ class NexonClient:
                 self._sleep(2.0**attempt)
 
         raise NexonApiError(f"{url} 호출 실패 — {last_error}")
+```
 
+> **Superseded (commit `f79500b`):** 실제 `_get`는 `try`/`except requests.RequestException` 바로 뒤에 있는
+> `else` 블록에서 상태 코드를 검사하지 않는다 — `except`에 `ValueError`도 함께 잡고, 상태 코드 200인데
+> `response.json()`이 파싱에 실패하는 경우도 같은 재시도 경로를 타도록 `try` 블록 안에서
+> `response.status_code == 200`이면 바로 `return response.json()`한다. 위 코드처럼 `else`에서만
+> 상태 코드를 보면 "200인데 JSON이 깨짐" 케이스가 재시도되지 않고 그대로 예외가 터진다.
+>
+> **Superseded (최종 리뷰 수정, finding 3):** `get_event_notices`는 `[_to_notice(item) for item in items]`로
+> 전체를 한 번에 매핑하지 않는다 — 항목 하나가 깨져도(`KeyError`/`TypeError`/`ValueError`) 전체 목록을
+> 포기하면 안 되므로, 반복문에서 항목별로 `try/except`로 감싸 건너뛰고 stderr에 남긴다. `_to_notice`도
+> `item.get("title", "")`가 아니라 `item.get("title") or ""`처럼 `None` 값을 방어한다. 이 계획 코드로
+> 되돌리지 말 것.
 
+```python
 def _to_notice(item: dict[str, Any]) -> Notice:
     return Notice(
         notice_id=int(item["notice_id"]),
@@ -1195,6 +1216,11 @@ def test_새_공지가_없으면_아무것도_하지_않는다(tmp_path):
     assert session.calls == []
 ```
 
+> **Superseded (최종 리뷰 수정 커밋들):** 실제 `tests/test_main.py`의 테스트 목록은 위보다 많다. 최종
+> 리뷰에서 배치 내부 순서(최신이 앞 유지), 배치 중간 실패 시 부분 기록, CLI 계약(`main()`의 반환값),
+> 새 공지가 없을 때 로그 한 줄이 남는지 등을 검증하는 테스트가 추가됐다. 이 목록을 "완전한 테스트
+> 스펙"으로 여기고 나머지를 지우지 말 것 — 실제 `tests/test_main.py` 파일이 최신 기준이다.
+
 - [ ] **Step 2: 테스트가 실패하는지 확인**
 
 Run: `.venv/Scripts/python -m pytest tests/test_main.py -v`
@@ -1404,6 +1430,13 @@ jobs:
 `concurrency`는 두 실행이 겹쳐 같은 공지를 두 번 보내거나 push가 충돌하는 걸 막는다.
 
 `발송 이력 커밋` 스텝에 `if: always()`를 붙이지 않는 게 중요하다. 발송 스텝이 실패하면 상태를 커밋하지 않고 다음 회차에 재시도해야 한다.
+
+> **Superseded (최종 리뷰 수정, finding 2):** 이 판단은 뒤집혔다 — 실제 워크플로우는 이 스텝에
+> `if: always()`를 **붙인다**. `save_seen`은 전송 성공 직후에만 호출되므로, 배치 중간에 실패해도
+> 그 전까지 성공한 공지의 기록은 이미 `state/seen.json`에 있다. 이 스텝을 건너뛰면 그 기록이 러너와
+> 함께 사라져 다음 회차에 같은 공지를 다시 보내려다 또 실패하는 무한 재시도/스팸이 된다. 목록 조회
+> 자체가 실패하거나 아무것도 못 보냈으면 파일이 안 바뀌므로 `git status --porcelain` 가드가 그대로
+> 걸러낸다 — 그래서 `if: always()`는 안전하고, 이전 판단보다 낫다. 이 계획 문구로 되돌리지 말 것.
 
 - [ ] **Step 2: README 작성**
 

@@ -1,6 +1,11 @@
+import json
+from pathlib import Path
+
 import pytest
 
 from maple_sunday_bot.notice import Notice, event_period, extract_images, is_sunday
+
+FIXTURES = Path(__file__).parent / "fixtures"
 
 
 @pytest.mark.parametrize(
@@ -74,6 +79,19 @@ def test_http가_아닌_이미지는_버린다():
 def test_이미지가_없으면_빈_리스트다():
     assert extract_images("<p>텍스트만 있습니다</p>") == []
     assert extract_images("") == []
+
+
+def test_HTML_엔티티로_이스케이프된_주소는_풀어서_반환한다():
+    html = '<img src="https://file.nexon.com/x.aspx?a=1&amp;b=2">'
+    assert extract_images(html) == ["https://file.nexon.com/x.aspx?a=1&b=2"]
+
+
+def test_실제_상세_응답_fixture에서_이미지_URL을_뽑는다():
+    detail = json.loads((FIXTURES / "notice_event_detail.json").read_text(encoding="utf-8"))
+
+    assert extract_images(detail["contents"]) == [
+        "https://lwi.nexon.com/maplestory/2026/0723_board/260809_3805XUHQ13Y7NIM7.png",
+    ]
 
 
 def _notice(start, end):

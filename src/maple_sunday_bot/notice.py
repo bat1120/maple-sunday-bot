@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import re
 from dataclasses import dataclass
+from html import unescape
 
 # 제목 표기가 "썬데이 메이플" / "스페셜 썬데이 메이플" / "썬데이메이플" 로 갈려서
 # 공백을 모두 지운 뒤 부분 문자열로 확인한다.
@@ -34,7 +35,7 @@ def extract_images(html: str) -> list[str]:
     """본문 HTML에서 이미지 URL을 등장 순서대로, 중복 없이 뽑는다."""
     urls: list[str] = []
     for raw in _IMG_SRC.findall(html or ""):
-        url = raw.strip()
+        url = unescape(raw.strip())
         if url.startswith("//"):
             url = "https:" + url
         if not url.startswith(("http://", "https://")):
